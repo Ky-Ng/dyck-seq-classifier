@@ -7,11 +7,18 @@ import math
 
 @dataclass
 class GPTConfig:
-    block_size: int = 1024  # Max Context length
-    vocab_size: int = 50257
+    # block_size: int = 1024  # Max Context length
+    # vocab_size: int = 50257
+    # n_layer: int = 12
+    # n_head: int = 12
+    # n_embd: int = 768  # Hidden Size
+    
+    block_size: int = 24  # Max Context length
+    vocab_size: int = 3
     n_layer: int = 12
     n_head: int = 12
-    n_embd: int = 768  # Hidden Size
+    n_embd: int = 36  # Hidden Size
+    d_head = 3
 
 
 class CausalSelfAttention(nn.Module):
