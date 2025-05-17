@@ -167,6 +167,7 @@ class Transformer(nn.Module):
     def __init__(self, config: TransformerConfig):
         super().__init__()
         self.config = config
+        self.training = True
 
         self.transformer = nn.ModuleDict(
             dict(
@@ -216,3 +217,20 @@ class Transformer(nn.Module):
                 logits.view(-1, logits.size(-1)), targets.view(-1).float())
             return logits, loss
         return logits
+
+    def predict(self, idx) -> torch.tensor:
+        """
+        Takes in input (B,T,d) and returns a (B,1) where each value is the probability of the string being grammatical
+        """
+        self.eval()
+        with torch.no_grad():
+            logits = self.forward(idx)
+            probs = torch.sigmoid(logits)
+
+        if self.training:
+            self.train()
+
+        return probs
+
+    def set_is_training(self, is_training: bool) -> None:
+        self.training = is_training
