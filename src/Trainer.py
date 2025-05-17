@@ -1,0 +1,94 @@
+from dataclasses import dataclass
+import torch
+from torch.nn import functional as F
+
+from Transformer import Transformer
+
+
+@dataclass
+class TrainerConfig:
+    learning_rate: float = 3e-4
+    num_epochs: int = 50
+    verbose: bool = True
+    positive_threshold: float = 0.75
+    negative_threshold: float = 0.25
+
+
+class Trainer():
+    def __init__(self, config: TrainerConfig, model: Transformer, x, y, val_x=None, val_y=None):
+        # Hyperparameters
+        self.learning_rate = config.learning_rate
+        self.positive_threshold = config.positive_threshold
+        self.negative_threshold = config.negative_threshold
+        self.num_epochs = config.num_epochs
+        self.model = model
+
+        # Data
+        self.x = x
+        self.y = y
+        self.val_x = val_x
+        self.val_y = val_y
+
+        # Optimizer
+        self.optimizer = torch.optim.AdamW(model.parameters(), lr=self.learning_rate)
+
+        self.verbose = config.verbose
+
+    def train(self):
+        for i in range(self.num_epochs):
+            self.optimizer.zero_grad()
+            logits, loss = self.model(self.x, self.y)
+            loss.backward()  # Accumulates gradients
+            self.optimizer.step()  # updates params
+
+            # Loss is a single 1D tensor, item() moves back to CPU
+            if self.verbose:
+                # Evaluate Train and Validation Loss
+                self.model.set_is_training(False)
+                predict_train = self.model.predict(self.x)
+                predict_valid = self.model.predict(self.val_x)
+                self.model.set_is_training(True)
+
+                train_accuracy, train_unconfident = self.get_accuracy(
+                    predict_train, self.y)
+                valid_accuracy, valid_unconfident = self.get_accuracy(
+                    predict_valid, self.val_y)
+                print(
+                    f"""step {i}:
+                        loss: {loss.item()}
+                        train_accuracy: {train_accuracy}
+                        train_unconfidence: {train_unconfident}
+                        valid_accuracy: {valid_accuracy}
+                        valid_unconfident: {valid_unconfident}
+                    """)
+
+    def get_accuracy(self, predictions: torch.tensor, labels: torch.tensor) -> tuple[float, float]:
+        """
+        Converts probabilities into labels using the confidence (positive/negative) thresholds in self.config
+        Marks unconfident probabilities and incorrect classifications as incorrect
+
+        accuracy, percent_unconfident = get_accuracy(torch.tensor([0.8, 0.2, 0.3]), torch.tensor([1, 0, 0]))
+        accuracy = 2/3
+        percent_unconfident = 1/3 (0.3 is too high to be considered a confident negative for self.negative_threshold=0.25)
+        """
+        # Step 1) Construct masks for confident predictions
+        confidence_1 = predictions >= self.positive_threshold
+        confidence_0 = predictions <= self.negative_threshold
+
+        # Step 2) Score confident_positive as 1, confident_negative as 0, and unconfident as sentinel value -1
+        predicted_labels = torch.full_like(labels, -1.0, dtype=torch.float)
+        predicted_labels[confidence_1] = 1
+        predicted_labels[confidence_0] = 0
+
+        # Step 3) Calculate mask of correct confident predictions
+        labels = labels.float()  # Ensure labels is a float
+        is_correct_mask = (predicted_labels == labels).float()
+
+        # Step 4) Mark all unconfident values of -1.0 to 0.0 for averaging
+        unconfident_mask = predicted_labels == -1.0
+        is_correct_mask[unconfident_mask] = 0.0
+
+        # Step 5) Return accuracy and percent unconfident
+        accuracy = is_correct_mask.mean().item()
+        percent_unconfident = unconfident_mask.float().mean().item()
+        return accuracy, percent_unconfident
