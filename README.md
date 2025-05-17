@@ -3,7 +3,7 @@ Modelling dependency in LLMs using the Dyck Language
 
 ## Data Generation
 ```
-src/data_gen.py -o data/input -n 12
+python src/data_gen.py -o data/input -n 12
 ```
 ## Splitting Data
 ```

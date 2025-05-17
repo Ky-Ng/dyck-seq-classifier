@@ -9,8 +9,11 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-n", "--length", required=True,
                         type=int, help="Number of open parentheses")
+    parser.add_argument("-e", "--epochs", required=True, type=int, help="Number of epochs")
+
     args = parser.parse_args()
     n = args.length
+    epochs = args.epochs
 
     subprocess.run(["python", "src/data_gen.py", "-o", "data/input", "-n", f"{n}"])
     subprocess.run([
@@ -41,7 +44,7 @@ def main():
 
     # # Train Model
     trainer = Trainer(
-        config=TrainerConfig(),
+        config=TrainerConfig(num_epochs=epochs),
         model=model,
         x=x,
         y=y,
