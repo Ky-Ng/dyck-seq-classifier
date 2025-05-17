@@ -90,5 +90,5 @@ class Trainer():
 
         # Step 5) Return accuracy and percent unconfident
         accuracy = is_correct_mask.mean().item()
-        percent_unconfident = unconfident_mask.mean().item()
+        percent_unconfident = unconfident_mask.float().mean().item()
         return accuracy, percent_unconfident

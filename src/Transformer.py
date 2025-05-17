@@ -214,7 +214,7 @@ class Transformer(nn.Module):
         if targets is not None:
             # Flatten by (1) fixing the logits into (B*T, vocab_size) and (B*T)
             loss = F.binary_cross_entropy_with_logits(
-                logits.view(-1, logits.size(-1)), targets.view(-1).float())
+                logits.view(-1, logits.size(-1)), targets.view(-1).unsqueeze(1).float())
             return logits, loss
         return logits
 
