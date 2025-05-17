@@ -6,15 +6,12 @@ class Tokenizer():
         for idx, symbol in enumerate(symbols):
             self.token_mapping[symbol] = idx
             self.id_to_token_mapping[idx] = symbol
-            self.EOS_token = len(symbols)
 
     def encode(self, seq: str) -> list[int]:
         result = []
         for c in seq:
             result.append(self.token_mapping[c])
 
-        # Add EOS Token
-        result.append(self.EOS_token)
         return result
 
     def decode(self, tokens: list[int]) -> str:
