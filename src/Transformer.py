@@ -1,5 +1,7 @@
+import os
+import json
 import torch
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
@@ -234,3 +236,16 @@ class Transformer(nn.Module):
 
     def set_is_training(self, is_training: bool) -> None:
         self.training = is_training
+
+    def save_model(self, output_dir: str) -> None:
+        os.makedirs(output_dir, exist_ok=True)
+
+        # Serialize Configs
+        with open(os.path.join(output_dir, f"transformer_n{self.config.block_size}_config.json"), "w") as f:
+            json.dump(asdict(self.config), f)
+            
+        # Serialize Model
+        torch.save({
+            "model_stat_dict": self.state_dict(),
+            "config": self.config
+        }, os.path.join(output_dir, f"transformer_n{self.config.block_size}.pt"))

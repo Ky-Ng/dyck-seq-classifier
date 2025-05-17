@@ -1,6 +1,5 @@
 import argparse
 import random
-import csv
 import os
 
 # The answer to the question of Life, the Universe, and Everything
@@ -33,6 +32,9 @@ def write_out_file(path: str, data: list[str]) -> None:
     1,              (())
     """
     assert path.lower().endswith(".csv"), f"Path {path} must end with .csv"
+
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    
     with open(path, "w") as f:
         # Write Header
         f.write("grammatical, dyck_word\n")
