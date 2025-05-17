@@ -12,6 +12,7 @@ class TrainerConfig:
     verbose: bool = True
     positive_threshold: float = 0.75
     negative_threshold: float = 0.25
+    save_dir: str = "./checkpoint/models"
 
 
 class Trainer():
@@ -21,6 +22,7 @@ class Trainer():
         self.positive_threshold = config.positive_threshold
         self.negative_threshold = config.negative_threshold
         self.num_epochs = config.num_epochs
+        self.save_dir = config.save_dir
         self.model = model
 
         # Data
@@ -43,6 +45,7 @@ class Trainer():
         self.losses = []
 
     def train(self):
+        best_accuracy, best_unconfidence, best_epoch = -1.0, -1.0, -1
         for i in range(self.num_epochs):
             self.optimizer.zero_grad()
             logits, loss = self.model(self.x, self.y)
@@ -70,6 +73,12 @@ class Trainer():
             self.valid_accuracy.append(valid_accuracy)
             self.valid_unconfidence.append(valid_unconfident)
 
+            if valid_accuracy > best_accuracy:
+                best_accuracy = valid_accuracy
+                best_unconfidence = valid_unconfident
+                best_epoch = i
+                self.model.save_model(self.save_dir)
+
             if self.verbose:
                 print(
                     f"""step {i}:
@@ -80,6 +89,7 @@ class Trainer():
                         valid_unconfident: {valid_unconfident}
                     """)
 
+        print(f"Best Epoch = {best_epoch} with accuracy = {best_accuracy} and unconfidence = {best_unconfidence}")
         self.plot_training_curves()
 
     def get_accuracy(self, predictions: torch.tensor, labels: torch.tensor) -> tuple[float, float]:
