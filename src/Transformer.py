@@ -241,14 +241,14 @@ class Transformer(nn.Module):
         os.makedirs(output_dir, exist_ok=True)
 
         # Serialize Configs
-        with open(os.path.join(output_dir, f"transformer_n{self.config.block_size}_config.json"), "w") as f:
+        with open(os.path.join(output_dir, f"transformer_n{self.config.block_size//2}_config.json"), "w") as f:
             json.dump(asdict(self.config), f)
 
         # Serialize Model
         torch.save({
             "model_stat_dict": self.state_dict(), # TODO Rename to `model_state_dict`
             "config": self.config  # TODO REMOVE in future because of security issues
-        }, os.path.join(output_dir, f"transformer_n{self.config.block_size}.pt"))
+        }, os.path.join(output_dir, f"transformer_n{self.config.block_size//2}.pt"))
 
     @staticmethod
     def load_model(config_path: str, model_checkpoint: str) -> "Transformer":
