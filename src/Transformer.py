@@ -243,9 +243,39 @@ class Transformer(nn.Module):
         # Serialize Configs
         with open(os.path.join(output_dir, f"transformer_n{self.config.block_size}_config.json"), "w") as f:
             json.dump(asdict(self.config), f)
-            
+
         # Serialize Model
         torch.save({
-            "model_stat_dict": self.state_dict(),
-            "config": self.config
+            "model_stat_dict": self.state_dict(), # TODO Rename to `model_state_dict`
+            "config": self.config  # TODO REMOVE in future because of security issues
         }, os.path.join(output_dir, f"transformer_n{self.config.block_size}.pt"))
+
+    @staticmethod
+    def load_model(config_path: str, model_checkpoint: str) -> "Transformer":
+        # Step 1) Load in Transformer Configs Saved
+        config = Transformer._load_config(config_path)
+
+        # Step 2) Create model with uninitialized weights
+        model = Transformer(config)
+
+        # Step 3) Load Weights into model
+        checkpoint = torch.load(
+            model_checkpoint,
+            weights_only=False  # TODO Fix for security reasons later
+        )
+        model.load_state_dict(checkpoint["model_stat_dict"]) # TODO Rename to `model_state_dict`
+        return model
+
+    @staticmethod
+    def _load_config(config_path: str) -> TransformerConfig:
+        """
+        Returns a dictionary representing the config for the model
+
+        Usage:
+            config = load_config("./checkpoints/models/transformer_n14_config.json")
+            model = Transformer(config)
+        """
+        with open(config_path, "r") as f:
+            config_dict = json.load(f)
+            config = TransformerConfig(**config_dict)
+            return config
