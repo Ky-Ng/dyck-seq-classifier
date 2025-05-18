@@ -44,7 +44,7 @@ class Interpretability():
             n_head, n_layer, figsize=(n_layer * 2.2, n_head * 2.2))
 
         fig.suptitle(
-            f"Attention Matrix Heatmaps: {n_head} Heads | {n_layer} Layers | {n_embd} Hidden Size",
+            f"Attention Matrix Heatmaps: {n_layer} Layers | {n_head} Heads | {n_embd} Hidden Size",
             fontsize=12,
             y=0.98
         )
