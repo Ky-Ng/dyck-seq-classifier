@@ -2,6 +2,8 @@ import argparse
 import math
 import os
 
+from dyck_lib import is_valid_dyck_word
+
 
 def generate_dyck_words(n: int) -> list[str]:
     """
@@ -41,25 +43,6 @@ def generate_invalid_dyck_words(n: int) -> list[str]:
     """
     
     # fix the first and last parentheses to be open
-
-    def is_valid_dyck_word(seq: str) -> bool:
-        if len(seq) % 2 != 0:
-            return False
-
-        num_open_paren = 0
-
-        for c in seq:
-            if c == "(":
-                num_open_paren += 1
-            elif c == ")":
-                num_open_paren -= 1
-            else:
-                print(f"Invalid Character: {c}")
-                return False
-
-            if num_open_paren < 0:
-                return False
-        return True
 
     def backtrack(seq: str, num_open: int, num_close: int) -> None:
         """

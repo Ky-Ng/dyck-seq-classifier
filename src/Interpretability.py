@@ -3,6 +3,7 @@ import torch
 
 from Tokenizer import Tokenizer
 from Transformer import Transformer
+from dyck_lib import is_valid_dyck_word
 
 
 class Interpretability():
@@ -21,13 +22,14 @@ class Interpretability():
 
         # Run forward pass and extract attention matrix
         pred, attn_matrix = self.model.get_attentions(tokenized)
+        pred_prob = pred.item()
 
         # Output Prediction and plots
         print(
-            f"Interpreting sequence {seq} as grammatical: {pred.item():.03f}")
-        self.plot_attention_grid(attn_matrix, seq)
+            f"Interpreting sequence {seq} as grammatical: {pred_prob:.03f}")
+        self.plot_attention_grid(attn_matrix, seq, pred_prob)
 
-    def plot_attention_grid(self, attn_matrix: torch.Tensor, tokens: list[str]):
+    def plot_attention_grid(self, attn_matrix: torch.Tensor, tokens: list[str], grammatical_score: float = None):
         """
         Note: Written by GPT4o
         Plot a grid of attention matrices:
@@ -39,12 +41,21 @@ class Interpretability():
         n_layer, n_head, T, _ = attn_matrix.shape
         config = self.model.get_config()
         n_embd = config.n_embd
-        
+
         fig, axes = plt.subplots(
             n_head, n_layer, figsize=(n_layer * 2.2, n_head * 2.2))
 
+        # Generate Title
+        grammatical_label = "Grammatical" if is_valid_dyck_word(
+            "".join(tokens)) else "Ungrammatical"
+        
+        grammatical_score_text = f" | Grammatical Score: {grammatical_score:.03f}" if grammatical_score else ""
+
+        title = f"Attention Matrix Heatmaps: {n_layer} Layers | {n_head} Heads | {n_embd} Hidden Size | {grammatical_label} Seq = {tokens}"
+        title += grammatical_score_text
+
         fig.suptitle(
-            f"Attention Matrix Heatmaps: {n_layer} Layers | {n_head} Heads | {n_embd} Hidden Size",
+            title,
             fontsize=12,
             y=0.98
         )
