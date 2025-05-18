@@ -19,6 +19,7 @@ def main():
 
     subprocess.run(["python", "src/data_gen.py",
                    "-o", "data/input", "-n", f"{n}"])
+  
     subprocess.run([
         "python", "src/split_data.py",
         "-fv", f"data/input/valid_parentheses_n{n}.txt",
@@ -45,6 +46,7 @@ def main():
         n_head=4,
         n_embd=12
     )
+    
     model = Transformer(config)
 
     # # Train Model
@@ -58,7 +60,6 @@ def main():
     )
 
     trainer.train()
-
 
 if __name__ == "__main__":
     main()
