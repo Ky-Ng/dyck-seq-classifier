@@ -1,3 +1,4 @@
+import os
 import matplotlib.pyplot as plt
 import torch
 
@@ -7,9 +8,10 @@ from dyck_lib import is_valid_dyck_word
 
 
 class Interpretability():
-    def __init__(self, tokenizer: Tokenizer, model: Transformer):
+    def __init__(self, tokenizer: Tokenizer, model: Transformer, save_dir: str = None):
         self.tokenizer = tokenizer
         self.model = model
+        self.save_dir = save_dir
 
     def interpret(self, seq: str):
         # Tokenize Sequence
@@ -80,4 +82,11 @@ class Interpretability():
                 ax.set_title(f"H{j} | L{i}", fontsize=6)
 
         plt.tight_layout()
+
+        # Save Image if specified
+        if self.save_dir:
+            os.makedirs(self.save_dir, exist_ok=True)
+            save_fname = f"AttnMat_{n_layer}_Layers_{n_head}_Heads_{n_embd}_HiddenSize_{grammatical_label}_{tokens}"
+            plt.savefig(os.path.join(self.save_dir, save_fname), bbox_inches="tight")
+        
         plt.show()
