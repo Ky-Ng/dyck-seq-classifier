@@ -1,5 +1,5 @@
-import os
-import torch
+from Interpretability import Interpretability
+from Tokenizer import Tokenizer
 from Transformer import Transformer
 import argparse
 
@@ -14,17 +14,15 @@ def main():
     args = parser.parse_args()
     config_path, model_checkpoint = args.config_path, args.model_checkpoint
 
-    model = Transformer.load_model(
-        config_path,
-        model_checkpoint
+    interpeter = Interpretability(
+        tokenizer=Tokenizer(symbols=["(", ")"]),
+        model=Transformer.load_model(
+            config_path,
+            model_checkpoint
+        )
     )
 
-    # pred = model.predict(torch.tensor([0,1,0,1,0,1,0,1,0,1,0,1,0,1]).unsqueeze(0))
-    pred = model.predict(torch.tensor(
-        [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1]).unsqueeze(0))
-
-    print(pred)
-
+    interpeter.interpret("((((((()))))))")
 
 if __name__ == "__main__":
     main()

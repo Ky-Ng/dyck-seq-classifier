@@ -18,6 +18,8 @@ class TransformerConfig:
     n_classes: int = 1  # Grammatical Function returns [0, 1]
     # d_head = 3
 
+# TODO Rename since no longer causal without the attention masking
+
 
 class CausalSelfAttention(nn.Module):
     """
@@ -37,6 +39,9 @@ class CausalSelfAttention(nn.Module):
         self.n_head = config.n_head
         self.n_embd = config.n_embd
         self.n_hs = config.n_embd // config.n_head
+
+        # Logging and Probe
+        self.attn_mat = None
 
     def forward(self, x: torch.tensor):
         # B = Batch Size, T = sequence length, C = n_embd = "_" for now
@@ -73,6 +78,9 @@ class CausalSelfAttention(nn.Module):
 
         # Apply softmax row-wise
         attn = F.softmax(attn, dim=-1)
+
+        # Copy attention matrix and prevent it from being part of the computation graph
+        self.attn_mat = attn.detach().cpu()
 
         # Step 3) Reduce/Take weighted sum of the value vectors
         """
@@ -246,7 +254,7 @@ class Transformer(nn.Module):
 
         # Serialize Model
         torch.save({
-            "model_stat_dict": self.state_dict(), # TODO Rename to `model_state_dict`
+            "model_stat_dict": self.state_dict(),  # TODO Rename to `model_state_dict`
             "config": self.config  # TODO REMOVE in future because of security issues
         }, os.path.join(output_dir, f"transformer_n{self.config.block_size//2}.pt"))
 
@@ -263,7 +271,8 @@ class Transformer(nn.Module):
             model_checkpoint,
             weights_only=False  # TODO Fix for security reasons later
         )
-        model.load_state_dict(checkpoint["model_stat_dict"]) # TODO Rename to `model_state_dict`
+        # TODO Rename to `model_state_dict`
+        model.load_state_dict(checkpoint["model_stat_dict"])
         return model
 
     @staticmethod
@@ -279,3 +288,34 @@ class Transformer(nn.Module):
             config_dict = json.load(f)
             config = TransformerConfig(**config_dict)
             return config
+
+    def get_attentions(self, seq: torch.tensor, verbose: bool = True) -> torch.tensor:
+        """
+        Takes a seq and returns a tensor representing the attention matrix at each head and encoder
+        """
+        # Do a forward pass to populate the attention matrices (note: if seq has B > 1, only the last batch will be used; thus we throw the following error)
+        B, T = seq.size()
+        assert B == 1, f"Seq {seq} should be of Batch Size 1 since we log only 1 attention matrix at a time"
+
+        prediction = self.predict(seq)
+
+        all_attentions = []
+
+        for encoder in self.transformer.h:
+            # Attention Matrix of size (B=1, n_head, T, T)
+            attention_mat = encoder.attn.attn_mat
+
+            # Remove the first B=1, (n_head, T, T)
+            attention_mat = attention_mat.squeeze(0)
+            all_attentions.append(attention_mat)
+
+        # Stack Attentions at dim=0; (n_layer, n_head, T, T)
+        all_attentions = torch.stack(all_attentions)
+
+        return prediction, all_attentions
+
+    def get_config(self) -> TransformerConfig:
+        """
+        Getter for printing out name
+        """
+        return self.config
