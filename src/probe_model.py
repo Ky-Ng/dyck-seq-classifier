@@ -13,8 +13,10 @@ def main():
                         type=str, help="Path to Model Checkpoint")
     parser.add_argument("-o", "--save_dir", required=False,
                         type=str, default=None, help="Directory to Save Heatmap")
+    parser.add_argument("-s", "--sequence", required=False,
+                        type=str, default="((((((()))))))", help="Sequence to probe, defaults to `((((((()))))))`")
     args = parser.parse_args()
-    config_path, model_checkpoint, save_dir = args.config_path, args.model_checkpoint, args.save_dir
+    config_path, model_checkpoint, save_dir, seq = args.config_path, args.model_checkpoint, args.save_dir, args.sequence
 
     interpeter = Interpretability(
         tokenizer=Tokenizer(symbols=["(", ")"]),
@@ -25,7 +27,7 @@ def main():
         save_dir=save_dir
     )
 
-    interpeter.interpret("((((((()))))))")
+    interpeter.interpret(seq)
 
 if __name__ == "__main__":
     main()

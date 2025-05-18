@@ -28,7 +28,7 @@ class Interpretability():
 
         # Output Prediction and plots
         print(
-            f"Interpreting sequence {seq} as grammatical: {pred_prob:.03f}")
+            f"Interpreting sequence {seq} with grammatical score: {pred_prob:.03f}")
         self.plot_attention_grid(attn_matrix, seq, pred_prob)
 
     def plot_attention_grid(self, attn_matrix: torch.Tensor, tokens: list[str], grammatical_score: float = None):
