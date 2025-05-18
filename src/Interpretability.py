@@ -8,10 +8,11 @@ from dyck_lib import is_valid_dyck_word
 
 
 class Interpretability():
-    def __init__(self, tokenizer: Tokenizer, model: Transformer, save_dir: str = None):
+    def __init__(self, tokenizer: Tokenizer, model: Transformer, show: bool = True, save_dir: str = None):
         self.tokenizer = tokenizer
         self.model = model
         self.save_dir = save_dir
+        self.show = show
 
     def interpret(self, seq: str):
         # Tokenize Sequence
@@ -50,7 +51,7 @@ class Interpretability():
         # Generate Title
         grammatical_label = "Grammatical" if is_valid_dyck_word(
             "".join(tokens)) else "Ungrammatical"
-        
+
         grammatical_score_text = f" | Grammatical Score: {grammatical_score:.03f}" if grammatical_score else ""
 
         title = f"Attention Matrix Heatmaps: {n_layer} Layers | {n_head} Heads | {n_embd} Hidden Size | {grammatical_label} Seq = {tokens}"
@@ -87,6 +88,9 @@ class Interpretability():
         if self.save_dir:
             os.makedirs(self.save_dir, exist_ok=True)
             save_fname = f"AttnMat_{n_layer}_Layers_{n_head}_Heads_{n_embd}_HiddenSize_{grammatical_label}_{tokens}"
-            plt.savefig(os.path.join(self.save_dir, save_fname), bbox_inches="tight")
-        
-        plt.show()
+            plt.savefig(os.path.join(self.save_dir, save_fname),
+                        bbox_inches="tight")
+
+        # Show only if specified
+        if self.show:
+            plt.show()

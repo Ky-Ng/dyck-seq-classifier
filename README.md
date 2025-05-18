@@ -16,5 +16,11 @@ python src/train_loop.py -n 7 -e 160
 
 ## Probing the Model
 ```
-python ./src/probe_model.py --config_path=./checkpoint/models/epoch156/transformer_n14_config.json --model_checkpoint=./checkpoint/models/epoch156/transformer_n14.pt
+python ./src/probe_model.py -c ./checkpoint/models/epoch139_head4/transformer_n7_config.json -m ./checkpoint/models/epoch139_head4/transformer_n7.pt -o ./data/outputs/heatmaps -s "()()()()()()()"
+```
+
+### Generate Heatmaps Automatically
+```
+chmod +x ./scripts/gen_attn_maps.sh
+./scripts/gen_attn_maps.sh
 ```
