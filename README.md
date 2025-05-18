@@ -21,6 +21,9 @@ python ./src/probe_model.py -c ./checkpoint/models/epoch139_head4/transformer_n7
 
 ### Generate Heatmaps Automatically
 ```
-chmod +x ./scripts/gen_attn_maps.sh
-./scripts/gen_attn_maps.sh
+chmod +x ./scripts/gen_attn_maps_grammatical.sh
+./scripts/gen_attn_maps_grammatical.sh
+
+chmod +x ./scripts/gen_attn_maps_ungrammatical.sh
+./scripts/gen_attn_maps_ungrammatical.sh
 ```
