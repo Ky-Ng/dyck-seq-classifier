@@ -14,6 +14,15 @@ class Interpretability():
         self.save_dir = save_dir
         self.show = show
 
+        print (f"Initializing model of size = {self._count_model_params()}")
+    
+    def _count_model_params(self) -> int:
+        """
+        Count model params (traininable and frozen) used in this model
+        """
+        return sum(p.numel() for p in self.model.parameters())
+
+
     def interpret(self, seq: str):
         # Tokenize Sequence
         tokenized = self.tokenizer.encode(seq)

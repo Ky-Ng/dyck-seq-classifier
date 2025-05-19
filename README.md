@@ -14,6 +14,11 @@ python src/split_data.py -fv data/input/valid_parentheses_n12.txt -fi data/input
 python src/train_loop.py -n 7 -e 160
 ```
 
+## Evaluation
+```
+python src/eval_model.py -c ./checkpoint/models/epoch139_head4/transformer_n7_config.json -m ./checkpoint/models/epoch139_head4/transformer_n7.pt -n 7
+```
+
 ## Probing the Model
 ```
 python ./src/probe_model.py -c ./checkpoint/models/epoch139_head4/transformer_n7_config.json -m ./checkpoint/models/epoch139_head4/transformer_n7.pt -o ./data/outputs/heatmaps -s "()()()()()()()"

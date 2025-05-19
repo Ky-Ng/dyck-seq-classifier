@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from enum import Enum, auto
 import torch
 from torch.nn import functional as F
 import matplotlib.pyplot as plt
@@ -16,7 +17,12 @@ class TrainerConfig:
 
 
 class Trainer():
-    def __init__(self, config: TrainerConfig, model: Transformer, x, y, val_x, val_y):
+    class EvalMode(Enum):
+        TRAIN = auto()
+        VALID = auto()
+        TEST = auto()
+
+    def __init__(self, config: TrainerConfig, model: Transformer, x: torch.tensor, y: torch.tensor, val_x: torch.tensor, val_y: torch.tensor, test_x: torch.tensor = None, test_y: torch.tensor = None):
         # Hyperparameters
         self.learning_rate = config.learning_rate
         self.positive_threshold = config.positive_threshold
@@ -30,6 +36,8 @@ class Trainer():
         self.y = y
         self.val_x = val_x
         self.val_y = val_y
+        self.test_x = test_x
+        self.test_y = test_y
 
         # Optimizer
         self.optimizer = torch.optim.AdamW(
@@ -89,8 +97,33 @@ class Trainer():
                         valid_unconfident: {valid_unconfident}
                     """)
 
-        print(f"Best Epoch = {best_epoch} with accuracy = {best_accuracy} and unconfidence = {best_unconfidence}")
+        print(
+            f"Best Epoch = {best_epoch} with accuracy = {best_accuracy} and unconfidence = {best_unconfidence}")
         self.plot_training_curves()
+
+    def eval(self, mode: EvalMode, verbose: bool = True) -> tuple[float, float]:
+        match mode:
+            case Trainer.EvalMode.TRAIN:
+                return self._eval(self.x, self.y, "Train", verbose)
+            case Trainer.EvalMode.VALID:
+                return self._eval(self.val_x, self.val_y, "Valid", verbose)
+            case Trainer.EvalMode.TEST:
+                if self.test_x is None or self.test_y is None:
+                    raise ValueError("Test data not provided.")
+                return self._eval(self.test_x, self.test_y, "Test", verbose)
+            case _:
+                raise ValueError(f"Unsupported EvalMode: {mode}")
+
+    def _eval(self, inputs: torch.tensor, labels: torch.tensor, split_name: str, verbose: bool) -> tuple[float, float]:
+        self.model.set_is_training(False)
+        preds = self.model.predict(inputs)
+        self.model.set_is_training(True)
+
+        accuracy, unconf = self.get_accuracy(preds, labels)
+        if verbose:
+            print(
+                f"{split_name} Accuracy = {accuracy:.4f}, Unconfidence Rate = {unconf:.4f}")
+        return accuracy, unconf
 
     def get_accuracy(self, predictions: torch.tensor, labels: torch.tensor) -> tuple[float, float]:
         """
